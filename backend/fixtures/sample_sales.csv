@@ -1,0 +1,12 @@
+Date,Revenue,Product,Customer,Region,Status,Quantity
+2026-01-05,12000,Alpha Console,Northwind,North America,Paid,12
+2026-01-12,18000,Beta Suite,Contoso,Europe,Paid,18
+2026-02-03,24000,Alpha Console,Fabrikam,North America,Paid,20
+2026-02-14,9000,Delta Add-on,Northwind,Europe,Pending,7
+2026-03-02,31000,Beta Suite,Adventure Works,Asia,Paid,28
+2026-03-19,15000,Gamma Service,Contoso,Europe,Pending,11
+2026-04-01,42000,Alpha Console,Fabrikam,North America,Paid,35
+2026-04-17,17000,Gamma Service,Northwind,Asia,Cancelled,9
+2026-05-06,36000,Beta Suite,Adventure Works,Europe,Paid,30
+2026-05-12,21000,Delta Add-on,Contoso,North America,Pending,15
+

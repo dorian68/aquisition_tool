@@ -1,0 +1,50 @@
+﻿ORD-1001;2026-01-03;Sarah Martin;SARAH.MARTIN@email.com;France;Paris;Laptop Pro 14;Electronics;2;€1,299.00;10%;Delivered;Credit Card;Alex;
+ORD-1002;03/01/2026;john doe;john.doe@email.com;USA;New York;Laptop Pro 14;Electronics;1;1299;0.1;Delivered;Credit Card;Alex;duplicate customer?
+ORD-1003;2026/01/05;Marie Dupont;marie.dupont@email;FR;Paris;Office Chair;Suggest a cleaning plan for this Excel table before building a dashboard.;4;€199,00;5 %;Shipped;Paypal;Emma;email missing domain
+ORD-1004;Jan 6 2026;MICHAEL SMITH;michael.smith@email.com;USA;New York;Standing Desk;Furniture;1;599.00 EUR;0%;In process;Bank Transfer;Emma;
+ORD-1005;07-01-2026;Amina Diallo;amina.diallo@email.com;France;Lyon;Wireless Mouse;Electronics;10;29,90;;Pending;Card;Alex;missing discount
+ORD-1006;2026-01-08;Peter Brown;peter.brown@email.com;United Kingdom;London;Wireless Mouse;Electronics;8;29.90;0;Pending;Credit Card;Alex;same product spelling
+ORD-1007;08/01/26;Lucas Bernard;lucas.bernard@email.com;France;Marseille;Monitor 27 inch;Electronics;3;249;15%;Cancelled;Credit Card;John;
+ORD-1008;2026-13-01;Emma Wilson;emma.wilson@email.com;United Kingdom;London;Monitor 27 inch;Electronics;2;249.00;15%;Cancelled;Credit Card;John;invalid date
+ORD-1009;10/01/2026;Nina Rossi;nina.rossi@email.com;Italy;Rome;Desk Lamp;Home Office;6;39.99;0%;Delivered;Paypal;Emma;
+ORD-1010;2026-01-11;Carlos Rivera;carlos.rivera@email.com;Spain;Madrid;Desk Lamp;Home Office;5;39,99 EUR;0;Complete;Paypal;Emma;status synonym
+ORD-1011;12 Jan 2026;Sophie Leroy;sophie.leroy@email.com;FR;Paris;Keyboard Mechanical;Electronics;two;89.90;0%;Delivered;Credit Card;Alex;quantity as text
+ORD-1012;2026-01-13;David Kim;david.kim@email.com;USA;Boston;Keyboard Mechanical;Electronics;2;89.90;0%;Delivered;Credit Card;Alex;
+ORD-1013;14/01/2026;Olivia Garcia;olivia.garcia@email.com;Spain;Madrid;USB-C Hub;Electronics;7;49.90;10%;Returned;Credit Card;John;city has spaces
+ORD-1014;2026.01.15;Mohamed Ali;mohamed.ali@email.com;UAE;Dubai;USB C Hub;Electronics;7;49.90;10%;Refunded;Credit Card;John;returned/refunded ambiguity
+ORD-1015;;Laura Green;laura.green@email.com;United Kingdom;Manchester;Webcam HD;Electronics;3;69.00;0%;Delivered;Bank Transfer;Emma;missing date
+ORD-1016;2026-01-17;Chris Evans;chris.evans@email.com;USA;Chicago;Webcam HD;Electronics;-1;69.00;0%;Delivered;Credit Card;Alex;negative quantity
+ORD-1017;18/01/2026;Fatou Ndiaye;fatou.ndiaye@email.com;Senegal;Dakar;Notebook Pack;Stationery;12;9.99;0%;Shipped;Cash;John;
+ORD-1018;2026-01-19;Hiro Tanaka;hiro.tanaka@email.com;Japan;Tokyo;Notebook Pack;Stationery;0;9.99;0%;Pending;Credit Card;Emma;zero quantity
+ORD-1019;20-01-2026;Sarah Martin;sarah.martin@email.com;France;Paris;Laptop Pro 14;Electronics;1;1299.00;10%;Delivered;Credit Card;Alex;same customer different spacing/case
+ORD-1019;20-01-2026;Sarah Martin;sarah.martin@email.com;France;Paris;Laptop Pro 14;Electronics;1;1299.00;10%;Delivered;Credit Card;Alex;duplicate order id
+ORD-1021;2026/01/22;Ibrahim Khan;ibrahim.khan@email.com;Pakistan;Karachi;Tablet Mini;Electronics;2;399.00;5%;In Transit;Credit Card;John;
+ORD-1022;23 Jan 2026;Grace Lee;grace.lee@email.com;USA;Seattle;Tablet Mini;Electronics;2;399;5 %;In Transit;Credit Card;John;
+ORD-1023;2026-01-24;Thomas Müller;thomas.muller@email.com;Germany;Berlin;Printer Plus;Electronics;1;149.90;0%;Delivered;Invoice;Emma;
+ORD-1024;24/01/2026;Anna Schmidt;anna.schmidt@email.com;DE;Berlin;Printer Plus;Electronics;1;149,90;0;done;Invoice;Emma;
+ORD-1025;2026-01-26;Ravi Patel;ravi.patel@email.com;India;Mumbai;CRM Template;Digital Product;1;99.00;20%;Delivered;Credit Card;Alex;
+ORD-1026;27/01/2026;Mei Chen;mei.chen@email.com;China;Shanghai;CRM Template;Digital Products;1;99;20 %;Paid;Credit Card;Alex;digital product category mismatch
+ORD-1027;2026-01-28;Isabella Costa;isabella.costa@email.com;Brazil;São Paulo;Analytics Dashboard;Digital Product;1;149.00;0%;Delivered;Paypal;John;
+ORD-1028;2026-01-29;Daniel Silva;daniel.silva@email.com;Brazil;São Paulo;Analytics Dashboard;Digital Products;1;149;0;Complete;Paypal;John;accent inconsistency
+ORD-1029;30/01/2026;Noah Johnson;noah.johnson@email.com;USA;Austin;Excel Training;Service;1;499.00;10%;Delivered;Bank Transfer;Emma;
+ORD-1030;31/01/2026;Mia Thompson;mia.thompson@email.com;USA;Austin;Excel Training;Service;1;499,00 EUR;10%;Delivered;Bank Transfer;Emma;
+ORD-1031;2026-02-01;Elena Petrova;elena.petrova@email.com;Russia;Moscow;Power Query Course;Service;1;299.00;0%;Pending;Credit Card;Alex;
+ORD-1032;02/02/2026;Ahmed Hassan;ahmed.hassan@email.com;Egypt;Cairo;Power Query Course;Service;1;299;0%;Pending;Credit Card;Alex;product typo
+ORD-1033;2026-02-03;Julia Nowak;julia.nowak@email.com;Poland;Warsaw;Data Cleaning Kit;Digital Product;2;59.00;5%;Delivered;Paypal;John;
+ORD-1034;04/02/2026;George King;george.king@email.com;United Kingdom;London;Data Cleaning Kit;Digital Product;2;59,00;5%;Delivered;Paypal;John;
+ORD-1035;2026-02-05;Claire Dubois;claire.dubois@email.com;France;Nice;Dashboard Template;Digital Product;1;79.00;0%;Delivered;Credit Card;Emma;
+ORD-1036;05-02-2026;Claire Dubois;claire.dubois@email.com;FR;Nice;Dashboard Template;Digital Products;1;79;0;Delivered;Credit Card;Emma;possible duplicate customer
+ORD-1037;2026-02-07;Tom Wilson;tom.wilson@email.com;United Kingdom;London;Laptop Pro 14;Electronics;1;1,299.00;10%;Delivered;Credit Card;Alex;thousand separator
+ORD-1038;08/02/2026;Léa Bernard;lea.bernard@email.com;France;Lyon;Office Chair;Furniture;2;199.00;5%;Shipped;Paypal;John;
+ORD-1039;2026-02-09;Victor Hugo;victor.hugo@email.com;France;Paris;Standing Desk;Furniture;1;599;0%;Returned;Credit Card;Emma;
+ORD-1040;10/02/2026;Jane Miller;jane.miller@email.com;USA;Boston;Wireless Mouse;Electronics;15;29.90;0%;Delivered;Credit Card;Alex;
+ORD-1041;2026-02-11;Jane Miller;jane.miller@email.com;USA;Boston;Wireless Mouse;Electronics;15;29.90;0%;Delivered;Credit Card;Alex;duplicate-ish with country code
+ORD-1042;12 Feb 2026;Omar Benali;omar.benali@email.com;Morocco;Casablanca;Monitor 27 inch;Electronics;2;249;15%;Delivered;Cash;John;
+ORD-1043;2026-02-13;Sofia Romano;sofia.romano@email.com;Italy;Milan;Desk Lamp;Home Office;4;39.99;0%;In process;Invoice;Emma;
+ORD-1044;14/02/2026;Kenji Sato;kenji.sato@email.com;Japan;Tokyo;Keyboard Mechanical;Electronics;3;89.90;0%;Waiting;Credit Card;Alex;status not standardized
+ORD-1045;2026-02-15;Maria Lopez;maria.lopez@email.com;Spain;Barcelona;USB-C Hub;Electronics;5;49.90;10%;Delivered;Credit Card;John;
+ORD-1046;16/02/2026;Paul Martin;paul.martin@email.com;France;Paris;Webcam HD;Electronics;2;69.00;0%;Refunded;Credit Card;Emma;
+ORD-1047;2026-02-17;Aisha Khan;aisha.khan@email.com;Pakistan;Lahore;Notebook Pack;Stationery;20;9.99;0%;Delivered;Cash;John;
+ORD-1048;18/02/2026;Robert Taylor;robert.taylor@email.com;USA;Miami;Tablet Mini;Electronics;1;399.00;5%;Cancelled;Credit Card;Alex;
+ORD-1049;2026-02-19;Emily Davis;emily.davis@email.com;USA;Miami;Printer Plus;Electronics;1;149.90;0%;Delivered;Invoice;Emma;
+;20/02/2026;Unknown Customer;;;;CRM Template;Digital Product;1;99.00;20%;Delivered;Credit Card;;missing order id/customer info

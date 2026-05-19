@@ -1,0 +1,14 @@
+.git
+.pytest_cache
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.db
+**/*.log
+**/~$*
+*.xlsx
+*.xlsm
+*.xls
+backend/storage
+backend/test_storage
+backend/.env

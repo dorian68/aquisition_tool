@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+storage/
+optiquant.db
+test_optiquant.db
+
