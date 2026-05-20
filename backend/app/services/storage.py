@@ -1,4 +1,6 @@
 from pathlib import Path
+import json
+from typing import Any
 from uuid import uuid4
 
 from app.core.config import Settings, get_settings
@@ -24,6 +26,17 @@ class LocalStorage:
         path.write_bytes(content)
         return str(path.relative_to(self.root))
 
+    def save_spec_json(self, spec_id: str, payload: dict[str, Any]) -> str:
+        path = self.root / "specs" / f"{spec_id}.json"
+        path.write_text(json.dumps(payload, ensure_ascii=True, separators=(",", ":")), encoding="utf-8")
+        return str(path.relative_to(self.root))
+
+    def read_spec_json(self, spec_id: str) -> dict[str, Any]:
+        path = self._resolve(str(Path("specs") / f"{spec_id}.json"))
+        if not path.exists():
+            raise FileNotFoundError(f"Analysis not found: {spec_id}")
+        return json.loads(path.read_text(encoding="utf-8"))
+
     def read(self, storage_path: str) -> bytes:
         return self._resolve(storage_path).read_bytes()
 
@@ -41,4 +54,3 @@ class LocalStorage:
         if root != path and root not in path.parents:
             raise ValueError("Storage path escapes configured root")
         return path
-

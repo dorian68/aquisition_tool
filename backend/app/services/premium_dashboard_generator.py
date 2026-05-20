@@ -32,6 +32,7 @@ def generate_premium_dashboard(
     vba_project_path: str | Path | None = None,
     client_name: str | None = None,
     hide_settings: bool = False,
+    ai_report: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     try:
         return generate_dashboard(
@@ -42,6 +43,7 @@ def generate_premium_dashboard(
             write_macro_source_file=False,
             client_name=client_name,
             hide_settings=hide_settings,
+            ai_report=ai_report,
         )
     except (FileNotFoundError, ValueError) as exc:
         raise PremiumDashboardGenerationError(str(exc)) from exc

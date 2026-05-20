@@ -6,12 +6,31 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql+psycopg://optiquant:optiquant@postgres:5432/optiquant
-      LOCAL_STORAGE_PATH: /app/storage
-      JWT_SECRET_KEY: change-me-for-local-dev
-      ALLOW_MOCK_GOOGLE_AUTH: "true"
-      N8N_ENABLED: "false"
-      CORS_ORIGINS: "*"
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://optiquant:optiquant@postgres:5432/optiquant}
+      LOCAL_STORAGE_PATH: ${LOCAL_STORAGE_PATH:-/app/storage}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-me-for-local-dev}
+      ALLOW_MOCK_GOOGLE_AUTH: ${ALLOW_MOCK_GOOGLE_AUTH:-true}
+      N8N_ENABLED: ${N8N_ENABLED:-false}
+      N8N_WEBHOOK_LEAD_CREATED: ${N8N_WEBHOOK_LEAD_CREATED:-}
+      N8N_WEBHOOK_DASHBOARD_GENERATED: ${N8N_WEBHOOK_DASHBOARD_GENERATED:-}
+      N8N_WEBHOOK_FILE_DOWNLOADED: ${N8N_WEBHOOK_FILE_DOWNLOADED:-}
+      N8N_API_KEY: ${N8N_API_KEY:-}
+      CORS_ORIGINS: "${CORS_ORIGINS:-*}"
+      FRONTEND_ALLOWED_ORIGINS: "${FRONTEND_ALLOWED_ORIGINS:-http://localhost:5173,https://*.lovable.app}"
+      AI_ANALYST_ENABLED: ${AI_ANALYST_ENABLED:-true}
+      AI_ANALYST_PROVIDER: ${AI_ANALYST_PROVIDER:-langgraph}
+      AI_ANALYST_MODEL: ${AI_ANALYST_MODEL:-gpt-4.1-mini}
+      AI_ANALYST_TIMEOUT_SECONDS: ${AI_ANALYST_TIMEOUT_SECONDS:-25}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-25}
+      MAX_COLUMNS: ${MAX_COLUMNS:-100}
+      MAX_AI_CONTEXT_CHARS: ${MAX_AI_CONTEXT_CHARS:-20000}
+      MAX_TOP_CATEGORIES: ${MAX_TOP_CATEGORIES:-10}
+      MAX_TREND_POINTS: ${MAX_TREND_POINTS:-12}
+      MAX_ANOMALIES: ${MAX_ANOMALIES:-5}
+      MAX_CLEANING_ACTIONS_FOR_AI: ${MAX_CLEANING_ACTIONS_FOR_AI:-20}
+      MAX_HIGH_MISSING_COLUMNS_FOR_AI: ${MAX_HIGH_MISSING_COLUMNS_FOR_AI:-10}
+      AI_ANALYST_FAIL_OPEN: ${AI_ANALYST_FAIL_OPEN:-true}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
     volumes:
       - ./storage:/app/storage
     depends_on:

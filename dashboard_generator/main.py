@@ -128,6 +128,55 @@ def _write_settings_sheet(
     ws.set_column("B:B", 70)
 
 
+def _write_ai_insights_sheet(ws, wb, *, ai_report: dict[str, Any], profile: TemplateProfile) -> None:
+    theme = profile.theme
+    ws.hide_gridlines(2)
+    ws.set_tab_color(theme.purple)
+    title_fmt = wb.add_format({"bold": True, "font_size": 20, "font_color": theme.white, "bg_color": theme.panel})
+    section_fmt = wb.add_format({"bold": True, "font_size": 12, "font_color": theme.white, "bg_color": theme.purple, "border": 1, "border_color": theme.border})
+    body_fmt = wb.add_format({"font_color": "#111827", "text_wrap": True, "valign": "top", "border": 1, "border_color": "#E5E7EB"})
+    note_fmt = wb.add_format({"italic": True, "font_color": "#374151", "text_wrap": True, "bg_color": "#F3F4F6", "border": 1, "border_color": "#D1D5DB"})
+
+    ws.merge_range("A1:D1", _safe_text(ai_report.get("dashboard_title"), "AI Dashboard Analysis"), title_fmt)
+    ws.set_column("A:A", 24)
+    ws.set_column("B:D", 46)
+
+    row = 3
+    sections = [
+        ("Executive Summary", _safe_text(ai_report.get("executive_summary"))),
+        ("Data Quality Summary", _safe_text(ai_report.get("data_quality_summary"))),
+        ("Cleaning Summary", _safe_text(ai_report.get("cleaning_summary"))),
+        ("Key Insights", _bullet_lines(ai_report.get("key_insights"))),
+        ("Recommended Actions", _bullet_lines(ai_report.get("recommended_actions"))),
+        ("Risk Notes", _bullet_lines(ai_report.get("risk_notes"))),
+        ("AI Context Safety", "Raw CSV rows were not sent to the AI model. The AI report was generated from a compact Python-generated data profile."),
+    ]
+    for title, text in sections:
+        ws.merge_range(row, 0, row, 3, title, section_fmt)
+        row += 1
+        fmt = note_fmt if title == "AI Context Safety" else body_fmt
+        ws.merge_range(row, 0, row + 1, 3, text, fmt)
+        ws.set_row(row, 42)
+        ws.set_row(row + 1, 42)
+        row += 3
+
+
+def _safe_text(value: Any, fallback: str = "") -> str:
+    text = str(value or fallback).strip()
+    return text[:1200]
+
+
+def _list_values(value: Any, limit: int) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return [str(item).strip()[:400] for item in value[:limit] if str(item).strip()]
+
+
+def _bullet_lines(value: Any, limit: int = 8) -> str:
+    items = _list_values(value, limit)
+    return "\n".join(f"- {item}" for item in items) if items else "N/A"
+
+
 def generate_dashboard(
     csv_path: str | Path,
     output_path: str | Path,
@@ -138,6 +187,7 @@ def generate_dashboard(
     write_macro_source_file: bool = True,
     client_name: str | None = None,
     hide_settings: bool = False,
+    ai_report: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     result = clean_csv(csv_path)
     raw_df = result.raw_df
@@ -195,6 +245,10 @@ def generate_dashboard(
         about = wb.add_worksheet("About")
         writer.sheets["About"] = about
 
+        if ai_report:
+            ai_sheet = wb.add_worksheet("AI Insights")
+            writer.sheets["AI Insights"] = ai_sheet
+
         helper_header_fmt = wb.add_format({
             "bg_color": theme.panel_3,
             "font_color": theme.white,
@@ -234,6 +288,9 @@ def generate_dashboard(
         if hide_settings:
             settings.hide()
 
+        if ai_report:
+            _write_ai_insights_sheet(ai_sheet, wb, ai_report=ai_report, profile=profile)
+
         write_info_sheet(
             about,
             wb,
@@ -264,6 +321,7 @@ def generate_dashboard(
             ("Clean Data", "Clean Data", "A1"),
             ("Raw Data", "Raw Data", "A1"),
             ("Settings", "Settings", "A1"),
+            *([("AI Insights", "AI Insights", "A1")] if ai_report else []),
             ("Cleaning Log", "Cleaning Log", "A1"),
             ("About", "About", "A1"),
         ]
@@ -339,20 +397,35 @@ def generate_dashboard(
 
         insights_rect = Rect(1005, 235, 445, 300)
         engine.panel(insights_rect, fill=theme.panel, line=theme.border_glow, radius=22, border_width=1, shadow=True, accent_top=theme.purple)
-        engine.title(Rect(insights_rect.x + 24, insights_rect.y + 18, 220, 24), "Key Insights", size=12)
-        insight_rows = [
-            ("▲", theme.green, f"{metric_label(metric)} trend", f"Latest movement: {trend_delta:+.1f}% vs previous period"),
-            ("★", theme.orange, "Top segment", str(top_dim_df.iloc[0]["Category"]) if not top_dim_df.empty else "N/A"),
-            ("●", theme.cyan, "Cleaned data", f"{quality['duplicate_rows_removed']} duplicates removed · {quality['clean_rows']} records ready"),
-        ]
-        for i, (icon, color, title, line) in enumerate(insight_rows):
-            y = insights_rect.y + 62 + i * 58
-            engine.pill(Rect(insights_rect.x + 24, y, 28, 28), icon, fill=color, color="#061116" if color == theme.green else theme.white, size=9)
-            engine.label(Rect(insights_rect.x + 68, y - 1, 150, 16), title.upper(), size=7, color=theme.muted_2, bold=True)
-            engine.label(Rect(insights_rect.x + 68, y + 18, 320, 18), line, size=8, color=theme.white if i == 0 else theme.muted)
-        mini_area = Rect(insights_rect.x + 22, insights_rect.y + 232, insights_rect.w - 44, 50)
-        area_chart = make_area_chart(wb, theme, "_Dashboard Data", trend_area)
-        engine.insert_chart(mini_area, area_chart, inner_padding=0)
+        if ai_report:
+            engine.title(Rect(insights_rect.x + 24, insights_rect.y + 18, 270, 24), "AI Executive Summary", size=12)
+            engine.label(Rect(insights_rect.x + 24, insights_rect.y + 45, 360, 16), _safe_text(ai_report.get("dashboard_title"), "Dashboard Analysis"), size=8, color=theme.muted_2, bold=True)
+            engine.label(Rect(insights_rect.x + 24, insights_rect.y + 68, 390, 42), _safe_text(ai_report.get("executive_summary"), "AI analysis unavailable."), size=8, color=theme.white)
+            ai_lines = _list_values(ai_report.get("key_insights"), 3)
+            action_lines = _list_values(ai_report.get("recommended_actions"), 2)
+            for i, line in enumerate(ai_lines):
+                y = insights_rect.y + 124 + i * 34
+                engine.pill(Rect(insights_rect.x + 24, y, 24, 24), str(i + 1), fill=theme.cyan, color="#061116", size=8)
+                engine.label(Rect(insights_rect.x + 60, y + 2, 340, 20), line, size=7, color=theme.muted)
+            action_y = insights_rect.y + 226
+            engine.label(Rect(insights_rect.x + 24, action_y, 160, 14), "RECOMMENDED ACTIONS", size=7, color=theme.muted_2, bold=True)
+            for i, line in enumerate(action_lines):
+                engine.label(Rect(insights_rect.x + 24, action_y + 20 + i * 18, 380, 16), f"- {line}", size=7, color=theme.green if i == 0 else theme.muted)
+        else:
+            engine.title(Rect(insights_rect.x + 24, insights_rect.y + 18, 220, 24), "Key Insights", size=12)
+            insight_rows = [
+                ("▲", theme.green, f"{metric_label(metric)} trend", f"Latest movement: {trend_delta:+.1f}% vs previous period"),
+                ("★", theme.orange, "Top segment", str(top_dim_df.iloc[0]["Category"]) if not top_dim_df.empty else "N/A"),
+                ("●", theme.cyan, "Cleaned data", f"{quality['duplicate_rows_removed']} duplicates removed · {quality['clean_rows']} records ready"),
+            ]
+            for i, (icon, color, title, line) in enumerate(insight_rows):
+                y = insights_rect.y + 62 + i * 58
+                engine.pill(Rect(insights_rect.x + 24, y, 28, 28), icon, fill=color, color="#061116" if color == theme.green else theme.white, size=9)
+                engine.label(Rect(insights_rect.x + 68, y - 1, 150, 16), title.upper(), size=7, color=theme.muted_2, bold=True)
+                engine.label(Rect(insights_rect.x + 68, y + 18, 320, 18), line, size=8, color=theme.white if i == 0 else theme.muted)
+            mini_area = Rect(insights_rect.x + 22, insights_rect.y + 232, insights_rect.w - 44, 50)
+            area_chart = make_area_chart(wb, theme, "_Dashboard Data", trend_area)
+            engine.insert_chart(mini_area, area_chart, inner_padding=0)
 
         bar_rect = Rect(270, 565, 445, 285)
         bar_area = engine.chart_panel(bar_rect, f"Top {human_label(second or dim or 'Categories')}", profile.bar_subtitle)
@@ -397,6 +470,7 @@ def generate_dashboard(
         "macros_embedded": macros_embedded,
         "macro_source": str(generated_macro_source) if generated_macro_source else None,
         "settings_sheet": "Settings",
+        "ai_insights_sheet": "AI Insights" if ai_report else None,
     }
 
 
