@@ -1,14 +1,10 @@
 from functools import lru_cache
 from pathlib import Path
-from typing import Annotated
 
-from pydantic import BeforeValidator, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-def _parse_csv(value: str | list[str]) -> list[str]:
-    if isinstance(value, list):
-        return value
+def parse_cors_origins(value: str) -> list[str]:
     if not value:
         return []
     return [item.strip() for item in value.split(",") if item.strip()]
@@ -20,7 +16,7 @@ class Settings(BaseSettings):
     app_name: str = "OptiQuant IA Lead Tool Backend"
     environment: str = "local"
     api_v1_prefix: str = "/api/v1"
-    cors_origins: Annotated[list[str], BeforeValidator(_parse_csv)] = Field(default_factory=lambda: ["*"])
+    cors_origins: str = "*"
 
     database_url: str = "sqlite:///./optiquant.db"
 
@@ -43,8 +39,11 @@ class Settings(BaseSettings):
     n8n_api_key: str | None = None
     n8n_timeout_seconds: float = 3.0
 
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return parse_cors_origins(self.cors_origins)
+
 
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
-
