@@ -104,6 +104,25 @@ curl -X POST http://localhost:8000/api/v1/generator/dashboard \
   -o dashboard.xlsx
 ```
 
+Return everything in one JSON response, including the generated Excel file as base64 plus the full Python context and AI report:
+
+```bash
+curl -X POST http://localhost:8000/api/v1/generator/dashboard \
+  -F "file=@fixtures/sample_sales.csv;type=text/csv" \
+  -F "template=dark-saas" \
+  -F "output_format=xlsx" \
+  -F "include_ai_analysis=true" \
+  -F "response_mode=json"
+```
+
+The JSON response contains:
+
+- `dashboard_file.content_base64`: generated Excel file content.
+- `python_context`: full compact Python-generated data profile sent to the AI layer.
+- `ai_report`: LLM or fallback executive report.
+- `dataset_overview`, `data_quality`, `cleaning_actions`, `business_metrics`, `anomalies`, `dashboard_context`.
+- `limits.raw_rows_sent_to_llm`, always `0`.
+
 The AI Analyst never receives raw CSV rows. Python sends only a capped context JSON containing profile, quality, aggregation and anomaly summaries. LangGraph orchestrates the LLM report generation inside the backend. If `OPENAI_API_KEY` is missing, AI is disabled, or the LLM fails schema validation, the dashboard still generates with deterministic fallback insights.
 
 Relevant environment variables:

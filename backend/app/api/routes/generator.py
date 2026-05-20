@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import base64
 import json
 import shutil
 import tempfile
 import uuid
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse, JSONResponse
@@ -23,6 +24,7 @@ router = APIRouter(prefix="/generator", tags=["generator"])
 
 TemplateSlug = Literal["auto", "dark-saas", "fintech-executive", "light-consulting"]
 OutputFormat = Literal["xlsx", "xlsm"]
+ResponseMode = Literal["file", "json"]
 
 MEDIA_TYPES = {
     "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -39,12 +41,14 @@ async def generate_dashboard_file(
     hide_settings: bool = Form(default=False),
     include_ai_analysis: bool = Form(default=True),
     analysis_id: str | None = Form(default=None),
+    response_mode: ResponseMode = Form(default="file"),
     vba_project_file: UploadFile | None = File(default=None, description="Optional compiled vbaProject.bin for XLSM output."),
-) -> FileResponse:
+):
     settings = get_settings()
     content = await _read_valid_csv_upload(file)
 
     temp_dir = Path(tempfile.mkdtemp(prefix="optiquant_dashboard_"))
+    analysis_payload: dict[str, Any] | None = None
     try:
         csv_path = temp_dir / "input.csv"
         csv_path.write_bytes(content)
@@ -53,10 +57,20 @@ async def generate_dashboard_file(
         if include_ai_analysis:
             if analysis_id:
                 validate_csv_shape(csv_path, settings=settings)
-                ai_report = _load_stored_ai_report(analysis_id)
+                analysis_payload = _load_stored_analysis_payload(analysis_id)
+                ai_report = _extract_ai_report(analysis_payload)
             else:
                 analysis = prepare_python_analysis(csv_path, template=template, output_format=output_format, settings=settings)
-                ai_report = analysis["ai_report"]
+                analysis_id = str(uuid.uuid4())
+                analysis_payload = _build_analysis_payload(
+                    analysis_id=analysis_id,
+                    analysis=analysis,
+                    template=template,
+                    output_format=output_format,
+                    settings=settings,
+                )
+                LocalStorage(settings).save_spec_json(analysis_id, analysis_payload)
+                ai_report = analysis_payload["ai_report"]
         else:
             validate_csv_shape(csv_path, settings=settings)
 
@@ -90,6 +104,48 @@ async def generate_dashboard_file(
 
     selected = str(metadata["selected_template"])
     filename = f"dashboard-{selected}.{output_format}"
+    output_file = Path(metadata["output"])
+
+    if response_mode == "json":
+        content_bytes = output_file.read_bytes()
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        return JSONResponse({
+            "analysis_id": analysis_id if include_ai_analysis else None,
+            "selected_template": selected,
+            "recommended_template": (
+                analysis_payload.get("recommended_template")
+                if analysis_payload
+                else metadata.get("selected_template")
+            ),
+            "dashboard_file": {
+                "filename": filename,
+                "content_type": MEDIA_TYPES[output_format],
+                "output_format": output_format,
+                "size_bytes": len(content_bytes),
+                "content_base64": base64.b64encode(content_bytes).decode("ascii"),
+            },
+            "dataset_overview": analysis_payload.get("dataset_overview") if analysis_payload else None,
+            "data_quality": analysis_payload.get("data_quality") if analysis_payload else None,
+            "cleaning_actions": analysis_payload.get("cleaning_actions") if analysis_payload else [],
+            "business_metrics": analysis_payload.get("business_metrics") if analysis_payload else None,
+            "anomalies": analysis_payload.get("anomalies") if analysis_payload else [],
+            "dashboard_context": analysis_payload.get("dashboard_context") if analysis_payload else None,
+            "python_context": analysis_payload.get("python_context") if analysis_payload else None,
+            "ai_report": analysis_payload.get("ai_report") if analysis_payload else None,
+            "limits": analysis_payload.get("limits") if analysis_payload else {
+                "raw_rows_sent_to_llm": 0,
+                "ai_context_chars": 0,
+                "max_ai_context_chars": settings.max_ai_context_chars,
+            },
+            "ai_metadata": analysis_payload.get("ai_metadata") if analysis_payload else {
+                "provider": "langgraph",
+                "model": None,
+                "used_fallback": False,
+                "skipped": True,
+            },
+            "generation_metadata": _public_generation_metadata(metadata),
+        })
+
     response_headers = {
         "X-Dashboard-Template": selected,
         "X-Dashboard-Dataset-Type": str(metadata.get("dataset_type") or ""),
@@ -97,7 +153,7 @@ async def generate_dashboard_file(
     }
 
     return FileResponse(
-        path=Path(metadata["output"]),
+        path=output_file,
         media_type=MEDIA_TYPES[output_format],
         filename=filename,
         headers=response_headers,
@@ -118,34 +174,15 @@ async def analyze_dashboard_file(
         csv_path = temp_dir / "input.csv"
         csv_path.write_bytes(content)
         analysis = prepare_python_analysis(csv_path, template=template, output_format=output_format, settings=settings)
-        ai_context = analysis["ai_context"]
-        ai_report = analysis["ai_report"]
-        ai_metadata = analysis["ai_metadata"]
         analysis_id = str(uuid.uuid4())
-        payload = {
-            "analysis_id": analysis_id,
-            "recommended_template": ai_context["dashboard_context"]["recommended_template"],
-            "selected_template": analysis["selected_template"],
-            "dataset_overview": ai_context["dataset_overview"],
-            "data_quality": ai_context["data_quality"],
-            "ai_report": ai_report,
-            "limits": {
-                "raw_rows_sent_to_llm": 0,
-                "ai_context_chars": serialized_context_length(ai_context),
-                "max_ai_context_chars": settings.max_ai_context_chars,
-            },
-            "ai_metadata": {
-                "provider": "langgraph",
-                "model": ai_metadata.get("model"),
-                "used_fallback": bool(ai_metadata.get("used_fallback")),
-            },
-        }
-        LocalStorage(settings).save_spec_json(analysis_id, {
-            **payload,
-            "ai_context": ai_context,
-            "template": template,
-            "output_format": output_format,
-        })
+        payload = _build_analysis_payload(
+            analysis_id=analysis_id,
+            analysis=analysis,
+            template=template,
+            output_format=output_format,
+            settings=settings,
+        )
+        LocalStorage(settings).save_spec_json(analysis_id, payload)
         return JSONResponse(payload)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
@@ -166,12 +203,62 @@ async def _read_valid_csv_upload(file: UploadFile) -> bytes:
     return content
 
 
-def _load_stored_ai_report(analysis_id: str) -> dict:
+def _build_analysis_payload(
+    *,
+    analysis_id: str,
+    analysis: dict[str, Any],
+    template: str,
+    output_format: str,
+    settings: Any,
+) -> dict[str, Any]:
+    ai_context = analysis["ai_context"]
+    ai_metadata = analysis["ai_metadata"]
+    return {
+        "analysis_id": analysis_id,
+        "recommended_template": ai_context["dashboard_context"]["recommended_template"],
+        "selected_template": analysis["selected_template"],
+        "dataset_overview": ai_context["dataset_overview"],
+        "data_quality": ai_context["data_quality"],
+        "cleaning_actions": ai_context["cleaning_actions"],
+        "business_metrics": ai_context["business_metrics"],
+        "anomalies": ai_context["anomalies"],
+        "dashboard_context": ai_context["dashboard_context"],
+        "python_context": ai_context,
+        "ai_context": ai_context,
+        "ai_report": analysis["ai_report"],
+        "limits": {
+            "raw_rows_sent_to_llm": 0,
+            "ai_context_chars": serialized_context_length(ai_context),
+            "max_ai_context_chars": settings.max_ai_context_chars,
+        },
+        "ai_metadata": {
+            "provider": "langgraph",
+            "model": ai_metadata.get("model"),
+            "used_fallback": bool(ai_metadata.get("used_fallback")),
+            "ai_context_chars": ai_metadata.get("ai_context_chars"),
+        },
+        "template": template,
+        "output_format": output_format,
+    }
+
+
+def _load_stored_analysis_payload(analysis_id: str) -> dict[str, Any]:
     try:
-        payload = LocalStorage().read_spec_json(analysis_id)
+        return LocalStorage().read_spec_json(analysis_id)
     except FileNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Analysis not found") from exc
+
+
+def _extract_ai_report(payload: dict[str, Any]) -> dict[str, Any]:
     ai_report = payload.get("ai_report")
     if not isinstance(ai_report, dict):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Stored analysis is invalid")
     return ai_report
+
+
+def _public_generation_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
+    return {
+        key: value
+        for key, value in metadata.items()
+        if key not in {"output", "input", "vba_project_path"}
+    }

@@ -1,4 +1,5 @@
 import zipfile
+import base64
 
 
 def _workbook_xml(content: bytes, tmp_path):
@@ -83,6 +84,12 @@ def test_direct_generator_analyze_returns_analysis_json(client, sample_csv_bytes
     assert payload["ai_metadata"]["provider"] == "langgraph"
     assert payload["ai_metadata"]["used_fallback"] is True
     assert payload["ai_report"]["dashboard_title"]
+    assert payload["python_context"]["business_metrics"]["record_count"] == payload["dataset_overview"]["rows_after"]
+    assert "cleaning_actions" in payload["python_context"]
+    assert "business_metrics" in payload["python_context"]
+    assert "anomalies" in payload["python_context"]
+    assert "dashboard_context" in payload["python_context"]
+    assert "raw_rows" not in str(payload["python_context"])
 
 
 def test_dashboard_returns_excel_without_ai_when_disabled(client, sample_csv_bytes, tmp_path):
@@ -137,3 +144,49 @@ def test_sidebar_includes_ai_insights_nav_button(client, sample_csv_bytes, tmp_p
 
     assert response.status_code == 200, response.text
     assert "AI Insights" in _all_xml(response.content, tmp_path)
+
+
+def test_dashboard_json_mode_returns_file_and_full_analysis(client, sample_csv_bytes, tmp_path):
+    response = client.post(
+        "/api/v1/generator/dashboard",
+        data={
+            "template": "dark-saas",
+            "output_format": "xlsx",
+            "include_ai_analysis": "true",
+            "response_mode": "json",
+        },
+        files={"file": ("sample_sales.csv", sample_csv_bytes, "text/csv")},
+    )
+
+    assert response.status_code == 200, response.text
+    payload = response.json()
+    content = base64.b64decode(payload["dashboard_file"]["content_base64"])
+    assert content.startswith(b"PK")
+    assert payload["dashboard_file"]["filename"] == "dashboard-dark-saas.xlsx"
+    assert payload["python_context"]["business_metrics"]["record_count"] == payload["dataset_overview"]["rows_after"]
+    assert payload["ai_report"]["dashboard_title"]
+    assert payload["limits"]["raw_rows_sent_to_llm"] == 0
+    assert 'name="AI Insights"' in _workbook_xml(content, tmp_path)
+
+
+def test_dashboard_json_mode_without_ai_returns_file_and_no_ai_payload(client, sample_csv_bytes, tmp_path):
+    response = client.post(
+        "/api/v1/generator/dashboard",
+        data={
+            "template": "dark-saas",
+            "output_format": "xlsx",
+            "include_ai_analysis": "false",
+            "response_mode": "json",
+        },
+        files={"file": ("sample_sales.csv", sample_csv_bytes, "text/csv")},
+    )
+
+    assert response.status_code == 200, response.text
+    payload = response.json()
+    content = base64.b64decode(payload["dashboard_file"]["content_base64"])
+    assert content.startswith(b"PK")
+    assert payload["analysis_id"] is None
+    assert payload["python_context"] is None
+    assert payload["ai_report"] is None
+    assert payload["ai_metadata"]["skipped"] is True
+    assert 'name="AI Insights"' not in _workbook_xml(content, tmp_path)
